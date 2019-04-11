@@ -1,0 +1,84 @@
+---
+# factomd_path: "$GOPATH/src/github.com/FactomProject/factomd/"
+# 
+# nettool will not build if this path includes an environment variable (like $GOPATH above) because the dollar sign can't be resolved by the function # # os.path.isdir, resulting in:
+# 
+# File "/home/factom/.local/lib/python3.6/site-packages/docker/api/build.py", line 139, in build
+#    raise TypeError("You must specify a directory to build in path")
+
+factomd_path: "/home/factom/go/src/github.com/FactomProject/factomd/"
+# ------------------------------------------------------------------------------------------------
+
+# L<->L<->A<->L
+# A factomd network of 2 leaders on 1 side connected to 1 leader on the other side through 1 audit in the middle.
+
+# A factomd network of 3 leaders and 1 audit in a star with a leader(node1) at the center.
+
+# configure a docker network
+flags: --sim_stdin=false --customnet=1234 --network=CUSTOM --blktime=20 --debuglog=.* --db=Map --stdoutlog=out.txt --stderrlog=out.txt --faulttimeout=4 --roundtimeout=2
+# faulttimeout should be 1/5 blktime, roundtimeout should be 1/10 blktime
+# --config ./factomd.conf
+# This uses the config file in /root/go/src/github.com/FactomProject/factomd/
+# default is to use the one in /root/.factom/m2/
+
+nodes:
+    - name: node1
+      seed: true
+      role: federated
+      ports:
+          ui: 8190
+          api: 8188
+
+    - name: node2
+      seed: true
+      role: federated
+      ports:
+          ui: 8290
+          api: 8288
+
+    - name: node3
+      seed: true
+      role: audit
+      ports:
+          ui: 8390
+          api: 8388
+
+    - name: node4
+      seed: true
+      role: federated
+      ports:
+          ui: 8490
+          api: 8488
+
+network:
+    rules:
+          # allow all nodes to connect to the seeds server
+        - action: allow
+          target: seeds_server
+
+#        - action: allow
+#          source: node1
+#          target: node2
+#
+#        - action: allow
+#          source: node2
+#          target: node3
+#
+#        - action: allow
+#          source: node3
+#          target: node4
+
+        - action: allow
+          source: node1
+          target: node2
+
+        - action: allow
+          source: node1
+          target: node3
+
+        - action: allow
+          source: node1
+          target: node4
+        - action: deny
+          source: "*"
+

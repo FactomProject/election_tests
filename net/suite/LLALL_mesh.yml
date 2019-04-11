@@ -1,0 +1,58 @@
+---
+# factomd_path: "$GOPATH/src/github.com/FactomProject/factomd/"
+# 
+# nettool will not build if this path includes an environment variable (like $GOPATH above) because the dollar sign can't be resolved by the function # # os.path.isdir, resulting in:
+# 
+# File "/home/factom/.local/lib/python3.6/site-packages/docker/api/build.py", line 139, in build
+#    raise TypeError("You must specify a directory to build in path")
+
+factomd_path: "/home/factom/go/src/github.com/FactomProject/factomd/"
+# ------------------------------------------------------------------------------------------------
+
+# L<->L<->A<->L<->L all nodes connected to each other
+
+# configure a docker network
+flags: --sim_stdin=false --customnet=1234 --network=CUSTOM --blktime=10 --debuglog="Network|election" --broadcastnum=3 --db=map
+
+nodes:
+    - name: node1
+      seed: true
+      role: federated
+      ports:
+          ui: 8190
+          api: 8188
+
+    - name: node2
+      seed: true
+      role: federated
+      ports:
+          ui: 8290
+          api: 8288
+
+    - name: node3
+      seed: true
+      role: audit
+      ports:
+          ui: 8390
+          api: 8388
+
+    - name: node4
+      seed: true
+      role: federated
+      ports:
+          ui: 8490
+          api: 8488
+
+    - name: node5
+      seed: true
+      role: federated
+      ports:
+          ui: 8590
+          api: 8588
+
+network:
+    rules:
+          # allow all nodes to connect to the seeds server
+        - action: allow
+          target: seeds_server
+
