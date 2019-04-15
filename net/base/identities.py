@@ -4,7 +4,9 @@ Management of custom network leader identities.
 from collections import deque, namedtuple
 import yaml, os
 
-IDENTITIES_FILE = os.environ['DOCKER_DIRECTORY'] + 'identities.yml' #"docker/identities.yml"
+# IDENTITIES_FILE = os.environ['DOCKER_DIRECTORY'] + 'identities.yml' #"docker/identities.yml"
+IDENTITIES_FILE = '../net/docker/identities.yml'
+# DOCKER_DIRECTORY='../factomd/support/net/docker/'
 
 
 Identity = namedtuple("Identity", "chain, priv, pub")
@@ -32,12 +34,10 @@ class IdentityPool(object):
         Assign an identity to a node identitified by its name.
         """
         if node_name in self.assigned.keys():
-            raise Exception(
-                f"{node_name} already has an identity assigned"
+            raise Exception(f"{node_name} already has an identity assigned"
             )
         if not self.identities:
-            raise Exception(
-                f"No more identites to assign, add more in {IDENTITIES_FILE}"
+            raise Exception(f"No more identites to assign, add more in {IDENTITIES_FILE}"
             )
 
         identity = self.identities.popleft()
