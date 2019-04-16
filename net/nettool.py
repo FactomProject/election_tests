@@ -41,7 +41,7 @@ import net.base.log
 
 
 def main(**kwargs):
-    cfg_file = kwargs['file']      if 'file'       in kwargs else '../factomd/support/net/config.yml'
+    cfg_file = kwargs['file']      if 'file'       in kwargs else '../net/config.yml'
     fromvar =  kwargs['fromvar']   if 'fromvar'    in kwargs else ''
     to =       kwargs['to']        if 'to'         in kwargs else ''
     action =   kwargs['action']    if 'action'     in kwargs else ''
