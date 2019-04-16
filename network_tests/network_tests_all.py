@@ -1,7 +1,8 @@
-import re, subprocess, unittest, requests, json, time, os
+import re, subprocess, unittest, requests, json, time, os, sys
 from datetime import timedelta, datetime
 
-from factomd.support.net import nettool
+# from factomd.support.net import nettool
+import net.nettool
 from helpers.helpers import read_data_from_json
 
 '''
@@ -23,7 +24,10 @@ class NetworkTests(unittest.TestCase):
 
     # remove any logging files leftover in source directory so that they dont obfuscate any logging files created during this run
     directory = os.path.dirname(__file__)
+    print('directory', directory)
     filename = os.path.join(directory, config_file)
+    print('filename', filename)
+    print('version', sys.version)
     with open(filename) as f: filedata = f.read().splitlines()
     sourcepath = [line.split(':')[1] for line in filedata if line.split(':')[0]=='factomd_path'][0][2:-1]
     cmd = ['rm -rf '+sourcepath+'!(CLA).txt; rm -rf '+sourcepath+'engine/*.txt']
@@ -49,18 +53,18 @@ class NetworkTests(unittest.TestCase):
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
         # single elections, minutes 0 to 9
-        batch_start_time = time.time()
-        server_configuration = 'LLAL'
-        for target_minute in range(10):
-            self.test_single_election(server_configuration, target_minute, nodes_to_fault=(4,))
-        self.print_elapsed_time('batch', batch_start_time)
+        # batch_start_time = time.time()
+        # server_configuration = 'LLAL'
+        # for target_minute in range(10):
+        #     self.test_single_election(server_configuration, target_minute, nodes_to_fault=(4,))
+        # self.print_elapsed_time('batch', batch_start_time)
 
         # double elections, minutes 0 to 9
-        # batch_start_time = time.time()
-        # server_configuration = 'LLLAALL'
-        # for target_minute in range(10):
-        #     self.test_double_election(server_configuration, target_minute, nodes_to_fault=(7, 6))
-        # self.print_elapsed_time('batch', batch_start_time)
+        batch_start_time = time.time()
+        server_configuration = 'LLLAALL'
+        for target_minute in range(2):
+            self.test_double_election(server_configuration, target_minute, nodes_to_fault=(7, 6))
+        self.print_elapsed_time('batch', batch_start_time)
 
         # sequential elections, in subsequent minute, minutes 0 to 9
         # batch_start_time = time.time()
@@ -118,7 +122,7 @@ class NetworkTests(unittest.TestCase):
         self.reconnect_nodes(config_file, nodes_to_fault)
 
         # stop network
-        nettool.main(command='down', destroy=True, file=config_file)
+        net.nettool.main(command='down', destroy=True, file=config_file)
 
         self.timestamped_print('Single election test successful in minute', str(target_minute))
         self.print_elapsed_time('test', test_start_time)
@@ -148,7 +152,7 @@ class NetworkTests(unittest.TestCase):
                 self.reconnect_nodes(config_file, nodes_to_fault)
 
                 # stop network
-                nettool.main(command='down', destroy=True, file=config_file)
+                net.nettool.main(command='down', destroy=True, file=config_file)
 
                 self.timestamped_print('Double election test successful in minute', str(target_minute))
             else:
@@ -212,7 +216,7 @@ class NetworkTests(unittest.TestCase):
             self.reconnect_nodes(config_file, nodes_to_fault)
 
             # stop network
-            nettool.main(command='down', destroy=True, file=config_file)
+            net.nettool.main(command='down', destroy=True, file=config_file)
 
             self.timestamped_print('Sequential election test successful in minute', str(target_minute))
             self.print_elapsed_time('test', test_start_time)
@@ -263,7 +267,7 @@ class NetworkTests(unittest.TestCase):
                 self.reconnect_nodes(config_file, nodes_to_fault)
 
                 # stop network
-                nettool.main(command='down', destroy=True, file=config_file)
+                net.nettool.main(command='down', destroy=True, file=config_file)
 
                 self.timestamped_print('Sequential election test successful in minute', str(target_minute))
                 self.print_elapsed_time('test', test_start_time)
@@ -292,7 +296,7 @@ class NetworkTests(unittest.TestCase):
         self.timestamped_print(test_type,'election target minute', target_minute)
 
         # start network
-        nettool.main(command='up', build=new, file=config_file)
+        net.nettool.main(command='up', build=new, file=config_file)
         self.timestamped_print('waiting for docker to come up')
 
         # set target authority set
@@ -409,7 +413,7 @@ class NetworkTests(unittest.TestCase):
     #         fault_start_time = time.time()
     #         # fault node
     #         # self.debug_api_with_parameters('sim-ctrl', 1, {'commands':[str(node-1),'x']})
-    #         nettool.main(command='ins', fromvar='node1', to='node' + str(node), action='deny', file=config_file)
+    #         net.nettool.main(command='ins', fromvar='node1', to='node' + str(node), action='deny', file=config_file)
     #
     #         self.timestamped_print('fault elapsed time = ', str(timedelta(seconds=time.time() - fault_start_time))[:-3])
     #         print()
@@ -539,7 +543,7 @@ class NetworkTests(unittest.TestCase):
 
             # self.factomd_api_with_parameters('message-filter', node, {'output-regex': 'off', 'input-regex':'off'})
             result = self.debug_api_with_parameters('sim-ctrl', node, {'commands':['x']})
-            # nettool.main(command='ins', fromvar='node1', to='node' + str(node), action='allow', file=config_file)
+            # net.nettool.main(command='ins', fromvar='node1', to='node' + str(node), action='allow', file=config_file)
 
             self.timestamped_print('waiting for reconnected node', str(node), 'to sync')
             # node has resynced when it advances from minute node 1 is in
@@ -593,7 +597,7 @@ class NetworkTests(unittest.TestCase):
         self.timestamped_print('Faulting ended in a different minute from which it started. Lets try this test again!')
         self.print_elapsed_time('test', test_start_time)
         # stop network
-        nettool.main(command='down', destroy=True, file=config_file)
+        net.nettool.main(command='down', destroy=True, file=config_file)
 
     # *******************************************************************************
     # no longer used?
@@ -697,10 +701,10 @@ class NetworkTests(unittest.TestCase):
 
 
     def _network_bring_up(network_config_file):
-        nettool.main(command='up', file=network_config_file)
+        net.nettool.main(command='up', file=network_config_file)
 
     def _network_bring_down(network_config_file):
-        nettool.main(command='down', file=network_config_file)
+        net.nettool.main(command='down', file=network_config_file)
 
 
     def test_multiple_elections_different_blocks(self):
@@ -712,7 +716,7 @@ class NetworkTests(unittest.TestCase):
 
         # fault 2 leaders
         self.timestamped_print('faulting nodes 8 and 9')
-        nettool.main(command='ins', fromvar='node7', to='node8', action='deny', file=config_file)
+        net.nettool.main(command='ins', fromvar='node7', to='node8', action='deny', file=config_file)
         cutoff_height = self.leader_height(1)
         self.timestamped_print('cutoff_height', cutoff_height)
 
@@ -739,7 +743,7 @@ class NetworkTests(unittest.TestCase):
 
         # # reconnect lost nodes
         # self.timestamped_print('reconnecting nodes 6 and 7')
-        # nettool.main(command='ins', fromvar='node5', to='node6', action='allow', file=config_file)
+        # net.nettool.main(command='ins', fromvar='node5', to='node6', action='allow', file=config_file)
         #
         # # wait for reconnected node 6 to restart
         # self.timestamped_print('waiting for reconnected node 6 to sync')
@@ -768,7 +772,7 @@ class NetworkTests(unittest.TestCase):
 
         # fault 2 other leaders
         self.timestamped_print('faulting nodes 6 and 7')
-        nettool.main(command='ins', fromvar='node5', to='node6', action='deny', file=config_file)
+        net.nettool.main(command='ins', fromvar='node5', to='node6', action='deny', file=config_file)
         cutoff_height = self.leader_height(1)
         self.timestamped_print('cutoff_height', cutoff_height)
 
@@ -835,7 +839,8 @@ class NetworkTests(unittest.TestCase):
         network = 'LLLL_mesh'
         config_file = self.data[network]
 
-        nettool.main(command='ins', fromvar='node2', to='node3', action='allow', file=config_file)
+        # /home/factom/PycharmProjects/election_tests/net/suite/nettool.main(command='ins', fromvar='node2', to='node3', action='allow', file=config_file)
+        net.nettool.main(command='ins', fromvar='node2', to='node3', action='allow', file=config_file)
         for x in range(1, 311):
             self.timestamped_print(x, 'seconds')
             for node in range(1, 5): self.timestamped_print('node', node, 'connections', self.get_datadump(node))
@@ -852,7 +857,7 @@ class NetworkTests(unittest.TestCase):
         for node in range(1, 5): self.timestamped_print('node', node, 'connections', self.get_datadump(node))
 
         self.timestamped_print('partitioning network')
-        nettool.main(command='ins', fromvar='node2', to='node3', action='deny', file=config_file)
+        net.nettool.main(command='ins', fromvar='node2', to='node3', action='deny', file=config_file)
         cutoff_height = self.leader_height(1)
         self.timestamped_print('cutoff_height', cutoff_height)
 
@@ -874,7 +879,7 @@ class NetworkTests(unittest.TestCase):
         self.factomd_api_with_parameters('add-input', 1, {'tx-name': 'here_to_there'})
 
         self.timestamped_print('restoring network')
-        nettool.main(command='ins', fromvar='node2', to='node3', action='allow', file=config_file)
+        net.nettool.main(command='ins', fromvar='node2', to='node3', action='allow', file=config_file)
         cutoff_height = self.leader_height(1)
         self.timestamped_print('cutoff_height', cutoff_height)
 
@@ -1012,8 +1017,8 @@ class NetworkTests(unittest.TestCase):
 
         # fault leader
         self.timestamped_print('isolating node 4')
-        nettool.main(command='ins', fromvar='*', to='node4', action='deny', file=config_file)
-        nettool.main(command='ins', fromvar='node4', to='*', action='deny', file=config_file)
+        net.nettool.main(command='ins', fromvar='*', to='node4', action='deny', file=config_file)
+        net.nettool.main(command='ins', fromvar='node4', to='*', action='deny', file=config_file)
 
         self.wait_for_new_block(errormessage='Node 1 did not advance after faulting')
 
@@ -1032,8 +1037,8 @@ class NetworkTests(unittest.TestCase):
 
         # reconnect lost node
         self.timestamped_print('reconnecting node 4')
-        nettool.main(command='ins', fromvar='*', to='node4', action='allow', file=config_file)
-        nettool.main(command='ins', fromvar='node4', to='*', action='allow', file=config_file)
+        net.nettool.main(command='ins', fromvar='*', to='node4', action='allow', file=config_file)
+        net.nettool.main(command='ins', fromvar='node4', to='*', action='allow', file=config_file)
 
         self.wait_for_new_block(errormessage='Node 1 did not advance after reconnection')
 
@@ -1045,13 +1050,13 @@ class NetworkTests(unittest.TestCase):
     # ***************************************************************************
 
     def test_network_up(self):
-        nettool.main(command='up', build=self.build, file=self.config_file)
+        net.nettool.main(command='up', build=self.build, file=self.config_file)
 
     def test_network_down(self):
-        nettool.main(command='down', destroy=self.destroy, file=self.config_file)
+        net.nettool.main(command='down', destroy=self.destroy, file=self.config_file)
 
     def test_network_status(self):
-        nettool.main(command='status', file=self.data['network_config_file'])
+        net.nettool.main(command='status', file=self.data['network_config_file'])
 
     def test_docker_ps(self):
         subprocess.call("docker ps", shell=True)

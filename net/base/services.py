@@ -67,6 +67,7 @@ class Gateway(Service):
             tag="nettool_gateway",
             path=os.environ['DOCKER_DIRECTORY'] + "gateway"
         )
+        print('setpath', os.environ['DOCKER_DIRECTORY'])
         self.container = Container(
             docker,
             image=self.image,

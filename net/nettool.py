@@ -34,11 +34,14 @@ Options:
 """
 from docopt import docopt
 
-from ..net.base import config, environment, log
+# from ..net.base import config, environment, log
+import net.base.config
+import net.base.environment
+import net.base.log
 
 
 def main(**kwargs):
-    cfg_file = kwargs['file']      if 'file'       in kwargs else '../factomd/support/net/config.yml'
+    cfg_file = kwargs['file']      if 'file'       in kwargs else '../net/config.yml'
     fromvar =  kwargs['fromvar']   if 'fromvar'    in kwargs else ''
     to =       kwargs['to']        if 'to'         in kwargs else ''
     action =   kwargs['action']    if 'action'     in kwargs else ''
@@ -64,7 +67,7 @@ def main(**kwargs):
     else:
         raise Exception("Error parsing arguments")
 
-    log.section("Done")
+    net.base.log.section("Done")
 
 
 def _print_status(config_file):
@@ -98,9 +101,9 @@ def _environment_del(config_file, source, target, action, one_way):
 
 
 def _environment_from_file(config_file):
-    log.info("Reading config from:", config_file)
-    cfg = config.read_file(config_file)
-    return environment.Environment(cfg)
+    net.base.log.info("Reading config from:", config_file)
+    cfg = net.base.config.read_file(config_file)
+    return net.base.environment.Environment(cfg)
 
 
 if __name__ == "__main__":
