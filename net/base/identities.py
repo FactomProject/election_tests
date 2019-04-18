@@ -6,7 +6,7 @@ import yaml, os
 
 # IDENTITIES_FILE = os.environ['DOCKER_DIRECTORY'] + 'identities.yml' #"docker/identities.yml"
 IDENTITIES_FILE = '../net/docker/identities.yml'
-# DOCKER_DIRECTORY='../factomd/support/net/docker/'
+DOCKER_DIRECTORY='../net/docker/'
 
 
 Identity = namedtuple("Identity", "chain, priv, pub")

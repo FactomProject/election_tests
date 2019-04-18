@@ -94,7 +94,6 @@ class Image(object):
                 kwargs["path"] = self.path
                 kwargs["tag"] = self.tag
                 kwargs["rm"] = True
-                print ('kwargs', kwargs)
                 self.docker_image = self.docker.images.build(**kwargs)
 
     def destroy(self):

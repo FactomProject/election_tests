@@ -53,25 +53,25 @@ class NetworkTests(unittest.TestCase):
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
         # single elections, minutes 0 to 9
-        # batch_start_time = time.time()
-        # server_configuration = 'LLAL'
-        # for target_minute in range(10):
-        #     self.test_single_election(server_configuration, target_minute, nodes_to_fault=(4,))
-        # self.print_elapsed_time('batch', batch_start_time)
+        batch_start_time = time.time()
+        server_configuration = 'LLAL'
+        for target_minute in range(10):
+            self.test_single_election(server_configuration, target_minute, nodes_to_fault=(4,))
+        self.print_elapsed_time('batch', batch_start_time)
 
         # double elections, minutes 0 to 9
         batch_start_time = time.time()
         server_configuration = 'LLLAALL'
-        for target_minute in range(2):
+        for target_minute in range(10):
             self.test_double_election(server_configuration, target_minute, nodes_to_fault=(7, 6))
         self.print_elapsed_time('batch', batch_start_time)
 
         # sequential elections, in subsequent minute, minutes 0 to 9
-        # batch_start_time = time.time()
-        # server_configuration = 'LLLAALL'
-        # for target_minute in range(10):
-        #     self.test_sequential_elections(server_configuration, target_minute, nodes_to_fault=(7, 6))
-        # self.print_elapsed_time('batch', batch_start_time)
+        batch_start_time = time.time()
+        server_configuration = 'LLLAALL'
+        for target_minute in range(10):
+            self.test_sequential_elections(server_configuration, target_minute, nodes_to_fault=(7, 6))
+        self.print_elapsed_time('batch', batch_start_time)
 
         # test that network stops on the loss of a majority of the block's original leaders
         # batch_start_time = time.time()
@@ -86,6 +86,7 @@ class NetworkTests(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+    # pause network after tests are completed so that the nodes don't continue generating uninteresting log files
         nodes = 9
         for i in range(1, nodes+1):
             node = 'node' + str(i)

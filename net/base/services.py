@@ -13,6 +13,7 @@ class Service(object):
     """
     image = None
     container = None
+    DOCKER_DIRECTORY = '../net/docker/'
 
     @classmethod
     def rebuild_image(cls):
@@ -65,9 +66,9 @@ class Gateway(Service):
         self.__class__.image = Image(
             docker,
             tag="nettool_gateway",
-            path=os.environ['DOCKER_DIRECTORY'] + "gateway"
+            # path=os.environ['DOCKER_DIRECTORY'] + "gateway"
+            path = self.DOCKER_DIRECTORY + "gateway"
         )
-        print('setpath', os.environ['DOCKER_DIRECTORY'])
         self.container = Container(
             docker,
             image=self.image,
@@ -103,7 +104,8 @@ class SeedServer(Service):
     The seeds server is a container that runs an nginx instance and serves the
     list of factomd nodes for discovery.
     """
-    SEEDS_FILE_LOCAL = os.environ['DOCKER_DIRECTORY'] + 'seeds/seeds' #"docker/seeds/seeds"
+    # SEEDS_FILE_LOCAL = os.environ['DOCKER_DIRECTORY'] + 'seeds/seeds' #"docker/seeds/seeds"
+    SEEDS_FILE_LOCAL = '../net/docker/seeds/seeds' #"docker/seeds/seeds"
     SEEDS_FILE_REMOTE = "/usr/share/nginx/html/seeds"
 
     def __init__(self, docker, seed_nodes):
@@ -111,7 +113,7 @@ class SeedServer(Service):
         self.__class__.image = Image(
             docker,
             tag="nettool_seeds",
-            path=os.environ['DOCKER_DIRECTORY'] + "seeds"
+            path=self.DOCKER_DIRECTORY + "seeds"
         )
         self.container = Container(
             docker,
@@ -174,7 +176,7 @@ class Factomd(Service):
         self.__class__.image = Image(
             docker,
             tag="nettool_factomd",
-            path=os.environ['DOCKER_DIRECTORY'] + "node",
+            path=self.DOCKER_DIRECTORY + "node",
         )
 
         extra_args = {
