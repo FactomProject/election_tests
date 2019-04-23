@@ -6,7 +6,7 @@
 # path to the factomd code that will be used to build factomd containers,
 # by default uses the code two dirs up
 # factomd_path: "../../"
-factomd_path: "/home/factom/go/src/github.com/FactomProject/factomd/"
+factomd_path: "/Users/joshuabrigati/go/src/github.com/FactomProject/factomd/"
 
 # command-line flags that are passed to factomd during startup, you can
 # specify a common value here and override it for particular nodes

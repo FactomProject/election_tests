@@ -6,7 +6,7 @@
   "output_public_address": "FA2hWZgbpJKeVQhYckHML2XuJV4DgHoN7ZgBRpWdNh1rpqjR931F",
   "ec_wallet_address": "Es2Rf7iM6PdsqfYCo3D1tnAR65SkLENyWJG1deUzpRMQmbh9F3eG",
   "nettool_fileold": "../net/nettool.py ",
-  "network_config_file_default": "../net/suite/config.yml",
+  "network_config_file_default": "../net/config.yml",
   "LAL":        "../net/suite/LALstar.yml",
   "LLAL":       "../net/suite/LLALstar.yml",
   "LLALline":   "../net/suite/LLALline.yml",

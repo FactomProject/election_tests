@@ -21,15 +21,28 @@ class NetworkTests(unittest.TestCase):
     # In any case, this is the configuration file that determines factomd command line parameters, e.g. blocktime
     server_configuration = 'LLLAALL'
     config_file = data[server_configuration]
+    print("config_file:", config_file)
 
     # remove any logging files leftover in source directory so that they dont obfuscate any logging files created during this run
     directory = os.path.dirname(__file__)
     print('directory', directory)
     filename = os.path.join(directory, config_file)
+    filename2 = os.path.join(directory, data['network_config_file_default'])
+
+    with open(filename2) as f:
+        filedata2 = f.read().splitlines()
+    print('filedata2', filedata2)
+    sourcepath = [line.split(':')[1] for line in filedata2 if line.split(':')[0]=='factomd_path'][0][2:-1]
+    print('sourcepath',sourcepath)
+
+
     print('filename', filename)
+    print('filename2', filename2)
     print('version', sys.version)
-    with open(filename) as f: filedata = f.read().splitlines()
-    sourcepath = [line.split(':')[1] for line in filedata if line.split(':')[0]=='factomd_path'][0][2:-1]
+    # with open(filename) as f: filedata = f.read().splitlines()
+    # print('filedata',filedata)
+    # sourcepath = [line.split(':')[1] for line in filedata if line.split(':')[0]=='factomd_path'][0][2:-1]
+    # print('sourcepath',sourcepath)
     cmd = ['rm -rf '+sourcepath+'!(CLA).txt; rm -rf '+sourcepath+'engine/*.txt']
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 
