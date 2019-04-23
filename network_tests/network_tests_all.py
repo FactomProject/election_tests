@@ -109,6 +109,7 @@ class NetworkTests(unittest.TestCase):
     # *******************************************************************************
 
     def test_single_election(self, server_configuration, target_minute, nodes_to_fault, expect_stall=False, new=True):
+        print('server_configuration',server_configuration, 'target_minute', target_minute, 'nodes_to_fault', nodes_to_fault)
         faulting_finished_in_same_minute = False
         while not faulting_finished_in_same_minute:
 
