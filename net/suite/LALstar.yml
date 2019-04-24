@@ -1,12 +1,12 @@
 ---
 # factomd_path: "$GOPATH/src/github.com/FactomProject/factomd/"
-# 
+#
 # nettool will not build if this path includes an environment variable (like $GOPATH above) because the dollar sign can't be resolved by the function # # os.path.isdir, resulting in:
-# 
+#
 # File "/home/factom/.local/lib/python3.6/site-packages/docker/api/build.py", line 139, in build
 #    raise TypeError("You must specify a directory to build in path")
 
-#factomd_path: "/Users/joshuabrigati/go/src/github.com/FactomProject/factomd/"
+factomd_path: ""
 # ------------------------------------------------------------------------------------------------
 
 # A factomd network of 2 leaders and 1 audit in a star with a leader(node1) at the center.
@@ -54,4 +54,3 @@ network:
 
         - action: deny
           source: "*"
-

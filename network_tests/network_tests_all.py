@@ -17,6 +17,24 @@ class NetworkTests(unittest.TestCase):
     data = read_data_from_json('test_data.json')
     wallet_address = data['wallet_address']
 
+    print('data',data)
+    for dd in data:
+        if dd[0] == 'L' or dd[0] == 'A' or dd[0] == '_':
+            print('yeah',dd, " ", data[dd])
+            with open(data[dd], "r+") as f:
+                # line.split(':')[1]
+                filedata3 = f.readlines()
+                for line in enumerate(filedata3):
+                    print('line',line)
+                    if line[1].split(':')[0].replace(" ", "") == 'factomd_path':
+                        filedata3[line[0]] = 'factomd_path: "/Users/joshuabrigati/go/src/github.com/FactomProject/factomd/" \n'
+                        print('foundit!', line)
+                        f.truncate(0)
+
+                print('filedata3',filedata3)
+                f.writelines(filedata3)
+
+
     # set this as the network to use for non-overnight_battery commands
     # In any case, this is the configuration file that determines factomd command line parameters, e.g. blocktime
     server_configuration = 'LLLAALL'
@@ -36,7 +54,6 @@ class NetworkTests(unittest.TestCase):
     print('sourcepath',sourcepath)
 
 
-    print('filename', filename)
     print('filename2', filename2)
     print('version', sys.version)
     # with open(filename) as f: filedata = f.read().splitlines()

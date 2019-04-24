@@ -55,4 +55,3 @@ network:
           # allow all nodes to connect to the seeds server
         - action: allow
           target: seeds_server
-
