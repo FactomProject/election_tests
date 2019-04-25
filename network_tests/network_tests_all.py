@@ -17,23 +17,28 @@ class NetworkTests(unittest.TestCase):
     data = read_data_from_json('test_data.json')
     wallet_address = data['wallet_address']
 
-    print('data',data)
+    directory = os.path.dirname(__file__)
+    print('directory', directory)
+
+    filename2 = os.path.join(directory, data['network_config_file_default'])
+
+    with open(filename2) as f:
+        filedata2 = f.read().splitlines()
+    sourcepath = [line.split(':')[1] for line in filedata2 if line.split(':')[0] == 'factomd_path'][0][2:-1]
+    print('sourcepath', sourcepath)
+
     for dd in data:
         if dd[0] == 'L' or dd[0] == 'A' or dd[0] == '_':
-            print('yeah',dd, " ", data[dd])
+        # if dd =='LAL':
             with open(data[dd], "r+") as f:
-                # line.split(':')[1]
                 filedata3 = f.readlines()
                 for line in enumerate(filedata3):
-                    print('line',line)
                     if line[1].split(':')[0].replace(" ", "") == 'factomd_path':
-                        filedata3[line[0]] = 'factomd_path: "/Users/joshuabrigati/go/src/github.com/FactomProject/factomd/" \n'
-                        print('foundit!', line)
+                        filedata3[line[0]] = 'factomd_path: "'+sourcepath+'" \n'
+                        f.seek(0)
                         f.truncate(0)
 
-                print('filedata3',filedata3)
                 f.writelines(filedata3)
-
 
     # set this as the network to use for non-overnight_battery commands
     # In any case, this is the configuration file that determines factomd command line parameters, e.g. blocktime
@@ -42,17 +47,8 @@ class NetworkTests(unittest.TestCase):
     print("config_file:", config_file)
 
     # remove any logging files leftover in source directory so that they dont obfuscate any logging files created during this run
-    directory = os.path.dirname(__file__)
-    print('directory', directory)
+
     filename = os.path.join(directory, config_file)
-    filename2 = os.path.join(directory, data['network_config_file_default'])
-
-    with open(filename2) as f:
-        filedata2 = f.read().splitlines()
-    print('filedata2', filedata2)
-    sourcepath = [line.split(':')[1] for line in filedata2 if line.split(':')[0]=='factomd_path'][0][2:-1]
-    print('sourcepath',sourcepath)
-
 
     print('filename2', filename2)
     print('version', sys.version)

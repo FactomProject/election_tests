@@ -1,6 +1,6 @@
 ---
 
-factomd_path: "$GOPATH/src/github.com/FactomProject/factomd/"
+factomd_path: ""
 
 # A factomd network of 2 leaders connected to 2 other leaders through a single intervening follower node.
 # To break after the network is started, insert a deny rule
