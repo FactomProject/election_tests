@@ -9,6 +9,7 @@
   "network_config_file_default": "../net/suite/config.yml",
   "LAL":        "../net/suite/LALstar.yml",
   "LLAL":       "../net/suite/LLALstar.yml",
+  "LAALL":      "../net/suite/LAALLstar.yml",
   "LLALline":   "../net/suite/LLALline.yml",
   "LLLL":       "../net/suite/LLLL.yml",
   "LLLL_mesh":  "../net/suite/LLLL_mesh.yml",
