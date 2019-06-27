@@ -12,7 +12,7 @@ factomd_path: "/home/factom/go/src/github.com/FactomProject/factomd/"
 # A factomd network of 3 leaders and 1 audit in a star with a leader(node1) at the center.
 
 # configure a docker network
-flags: --sim_stdin=false --customnet=1234 --network=CUSTOM --blktime=30 --debuglog=.* --stdoutlog=out.txt --stderrlog=out.txt --db=Map --faulttimeout=10 --roundtimeout=5
+flags: --sim_stdin=false --customnet=1234 --network=CUSTOM --blktime=60 --debuglog=.* --stdoutlog=out.txt --stderrlog=out.txt --db=Map --faulttimeout=10 --roundtimeout=5
 # --config ./factomd.conf
 # This uses the config file in /root/go/src/github.com/FactomProject/factomd/
 # default is to use the one in /root/.factom/m2/

@@ -13,6 +13,7 @@ run 'test_network_down' to clear the network
 need to test single election in every minute, double election in at least minute 0, 1, and 9, sequential election in consecutive minutes including 9 then 0
 '''
 
+
 class NetworkTests(unittest.TestCase):
     data = read_data_from_json('test_data.json')
     wallet_address = data['wallet_address']
@@ -28,18 +29,19 @@ class NetworkTests(unittest.TestCase):
     filename = os.path.join(directory, config_file)
     print('filename', filename)
     print('version', sys.version)
-    with open(filename) as f: filedata = f.read().splitlines()
-    sourcepath = [line.split(':')[1] for line in filedata if line.split(':')[0]=='factomd_path'][0][2:-1]
-    cmd = ['rm -rf '+sourcepath+'!(CLA).txt; rm -rf '+sourcepath+'engine/*.txt']
+    with open(filename) as f:
+        filedata = f.read().splitlines()
+    sourcepath = [line.split(':')[1] for line in filedata if line.split(':')[0] == 'factomd_path'][0][2:-1]
+    cmd = ['rm -rf ' + sourcepath + '!(CLA).txt; rm -rf ' + sourcepath + 'engine/*.txt']
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 
     '''set build and destroy to True when:
     switching network configuration files, or
     changing anything in a network configuration file
     rebuilding a fresh database'''
-    # build = False
+    build = False
     # destroy = False
-    build = True
+    # build = True
     destroy = True
     BLOCKTIME = 30
     # how many seconds to wait for an operation to complete
@@ -48,11 +50,11 @@ class NetworkTests(unittest.TestCase):
     def test_overnight_battery(self):
         battery_start_time = time.time()
         for i in range(9):
-            node = 'node' + str(i+1)
+            node = 'node' + str(i + 1)
             cmd = ['docker', 'exec', '-it', node, 'bash', '-c', 'rm -rf *.txt']
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-        # single elections, minutes 0 to 9
+        # # single elections, minutes 0 to 9
         batch_start_time = time.time()
         server_configuration = 'LLAL'
         for target_minute in range(10):
@@ -73,22 +75,29 @@ class NetworkTests(unittest.TestCase):
             self.test_sequential_elections(server_configuration, target_minute, nodes_to_fault=(7, 6))
         self.print_elapsed_time('batch', batch_start_time)
 
+        # sequential elections, in subsequent minute, minutes 0 to 9
+        batch_start_time = time.time()
+        server_configuration = 'LLLAALLLL'
+        for target_minute in range(10):
+            self.test_sequential_elections(server_configuration, target_minute, nodes_to_fault=(7, 6))
+        self.print_elapsed_time('batch', batch_start_time)
+
         # test that network stops on the loss of a majority of the block's original leaders
-        # batch_start_time = time.time()
-        # # test that network stalls if majority of feds are faulted
-        # server_configuration = 'LAL'
-        # self.test_single_election(server_configuration, nodes_to_fault=(3,), expect_stall=True)
-        # server_configuration = 'LLAL'
-        # self.test_stop_on_loss_of_original_majority(server_configuration, nodes_to_fault=(4,))
-        # self.print_elapsed_time('batch', batch_start_time)
+        batch_start_time = time.time()
+        # test that network stalls if majority of feds are faulted
+        server_configuration = 'LAL'
+        self.test_single_election(server_configuration, nodes_to_fault=(3,), expect_stall=True)
+        server_configuration = 'LLAL'
+        self.test_stop_on_loss_of_original_majority(server_configuration, nodes_to_fault=(4,))
+        self.print_elapsed_time('batch', batch_start_time)
 
         self.print_elapsed_time('battery', battery_start_time)
 
     @classmethod
     def tearDownClass(cls):
-    # pause network after tests are completed so that the nodes don't continue generating uninteresting log files
+        # pause network after tests are completed so that the nodes don't continue generating uninteresting log files
         nodes = 9
-        for i in range(1, nodes+1):
+        for i in range(1, nodes + 1):
             node = 'node' + str(i)
             cmd = ['docker', 'pause', node]
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -100,24 +109,29 @@ class NetworkTests(unittest.TestCase):
         while not faulting_finished_in_same_minute:
 
             # bring up network and verify correct operation
-            test_start_time, config_file, initial_audit_server_list, initial_federated_server_list = self.initialize_network('Single election', server_configuration, target_minute, new)
+            test_start_time, config_file, initial_audit_server_list, initial_federated_server_list = self.initialize_network(
+                'Single election', server_configuration, target_minute, new)
             print()
 
             # fault node
             # current_audit_server_list, current_federated_server_list, end_test, faulting_finished_in_same_minute = self.fault(nodes_to_fault=(nodes_to_fault[0],))
-            current_audit_server_list, current_federated_server_list, end_test, faulting_finished_in_same_minute = self.fault(nodes_to_fault=nodes_to_fault)
+            current_audit_server_list, current_federated_server_list, end_test, faulting_finished_in_same_minute = self.fault(
+                nodes_to_fault=nodes_to_fault)
 
-            if end_test: break
+            if end_test:
+                break
 
             elif faulting_finished_in_same_minute:
-                    # verify node promotion
-                    self.verify_promotion(initial_audit_server_list, current_federated_server_list, number_of_servers_to_promote=1)
+                # verify node promotion
+                self.verify_promotion(initial_audit_server_list, current_federated_server_list,
+                                      number_of_servers_to_promote=1)
 
-                    # verify node demotion
-                    self.verify_demotion((nodes_to_fault[0],), current_audit_server_list)
+                # verify node demotion
+                self.verify_demotion((nodes_to_fault[0],), current_audit_server_list)
 
             else:
-                self.timestamped_print('Faulting ended in a different minute from which it started. Lets try this test again!')
+                self.timestamped_print(
+                    'Faulting ended in a different minute from which it started. Lets try this test again!')
 
         # reconnect faulted nodes
         self.reconnect_nodes(config_file, nodes_to_fault)
@@ -135,16 +149,19 @@ class NetworkTests(unittest.TestCase):
         while not faulting_finished_in_same_minute:
 
             # bring up network and verify correct operation
-            test_start_time, config_file, initial_audit_server_list, initial_federated_server_list = self.initialize_network('Double', server_configuration, target_minute, new)
+            test_start_time, config_file, initial_audit_server_list, initial_federated_server_list = self.initialize_network(
+                'Double', server_configuration, target_minute, new)
             print()
 
             # fault node 6 and node 7
             # current_audit_server_list, current_federated_server_list, faulting_finished_in_same_minute = self.fault(nodes_to_fault=(nodes_to_fault[0],))
-            current_audit_server_list, current_federated_server_list, end_test, faulting_finished_in_same_minute = self.fault(nodes_to_fault=nodes_to_fault)
+            current_audit_server_list, current_federated_server_list, end_test, faulting_finished_in_same_minute = self.fault(
+                nodes_to_fault=nodes_to_fault)
 
             if faulting_finished_in_same_minute:
                 # verify node 4 and node 5 promotion
-                self.verify_promotion(initial_audit_server_list, current_federated_server_list, number_of_servers_to_promote=2)
+                self.verify_promotion(initial_audit_server_list, current_federated_server_list,
+                                      number_of_servers_to_promote=2)
 
                 # verify node 6 and 7 demotion
                 self.verify_demotion(nodes_to_fault, current_audit_server_list)
@@ -157,7 +174,8 @@ class NetworkTests(unittest.TestCase):
 
                 self.timestamped_print('Double election test successful in minute', str(target_minute))
             else:
-                self.timestamped_print('Faulting ended in a different minute from which it started. Lets try this test again!')
+                self.timestamped_print(
+                    'Faulting ended in a different minute from which it started. Lets try this test again!')
                 self.print_elapsed_time('test', test_start_time)
 
     # *******************************************************************************
@@ -166,7 +184,8 @@ class NetworkTests(unittest.TestCase):
         # multiple nodes_to_fault must be in descending order
 
         # bring up network and verify correct operation
-        test_start_time, config_file, initial_audit_server_list, initial_federated_server_list = self.initialize_network('Sequential',  server_configuration, target_minute, new)
+        test_start_time, config_file, initial_audit_server_list, initial_federated_server_list = self.initialize_network(
+            'Sequential', server_configuration, target_minute, new)
         print()
 
         # fault 1st node
@@ -177,7 +196,8 @@ class NetworkTests(unittest.TestCase):
         else:
 
             # verify 1st audit promotion
-            self.verify_promotion(initial_audit_server_list, current_federated_server_list, number_of_servers_to_promote=1)
+            self.verify_promotion(initial_audit_server_list, current_federated_server_list,
+                                  number_of_servers_to_promote=1)
 
             # verify 1st leader demotion
             self.verify_demotion((nodes_to_fault[0],), current_audit_server_list)
@@ -208,7 +228,8 @@ class NetworkTests(unittest.TestCase):
             self.timestamped_print('current_audit_server_list', current_audit_server_list)
 
             # verify audit server promotion
-            self.verify_promotion(initial_audit_server_list, current_federated_server_list, number_of_servers_to_promote=1)
+            self.verify_promotion(initial_audit_server_list, current_federated_server_list,
+                                  number_of_servers_to_promote=1)
 
             # verify node 6 demotion
             self.verify_demotion((6,), current_audit_server_list)
@@ -230,15 +251,18 @@ class NetworkTests(unittest.TestCase):
         while not faulting_finished_in_same_minute:
 
             # bring up network and verify correct operation
-            test_start_time, config_file, initial_audit_server_list, initial_federated_server_list = self.initialize_network('Fed majority loss',  server_configuration, target_minute, new)
+            test_start_time, config_file, initial_audit_server_list, initial_federated_server_list = self.initialize_network(
+                'Fed majority loss', server_configuration, target_minute, new)
             print()
 
             # fault nodes
-            current_audit_server_list, current_federated_server_list, faulting_finished_in_same_minute = self.fault(server_configuration, config_file, initial_audit_server_list, nodes_to_fault=nodes_to_fault)
+            current_audit_server_list, current_federated_server_list, faulting_finished_in_same_minute = self.fault(
+                server_configuration, config_file, initial_audit_server_list, nodes_to_fault=nodes_to_fault)
             if faulting_finished_in_same_minute:
 
                 # verify node promotion
-                self.verify_promotion(initial_audit_server_list, current_federated_server_list, number_of_servers_to_promote=len(nodes_to_fault))
+                self.verify_promotion(initial_audit_server_list, current_federated_server_list,
+                                      number_of_servers_to_promote=len(nodes_to_fault))
 
                 # verify node demotion
                 self.verify_demotion(nodes_to_fault, current_audit_server_list)
@@ -275,7 +299,8 @@ class NetworkTests(unittest.TestCase):
                 # else:
                 #     server_configuration = original_server_configuration
                 #     self.restart_test(test_start_time, config_file)
-            else: self.restart_test(test_start_time, config_file)
+            else:
+                self.restart_test(test_start_time, config_file)
 
     # *******************************************************************************
 
@@ -294,7 +319,7 @@ class NetworkTests(unittest.TestCase):
         config_file = self.data[server_configuration]
         self.timestamped_print('config_file', config_file)
         test_start_time = time.time()
-        self.timestamped_print(test_type,'election target minute', target_minute)
+        self.timestamped_print(test_type, 'election target minute', target_minute)
 
         # start network
         net.nettool.main(command='up', build=new, file=config_file)
@@ -302,23 +327,27 @@ class NetworkTests(unittest.TestCase):
 
         # set target authority set
         desired = []
-        for server in range(1, len(server_configuration)+1): desired.append(server_configuration[server-1])
+        for server in range(1, len(server_configuration) + 1): desired.append(server_configuration[server - 1])
         self.timestamped_print('desired', ''.join(desired))
         print()
 
         # wait for authority set to match target authority set
         for seconds in range(self.WAITTIME):
             actual = []
-            for server in range(1, len(server_configuration) + 1): actual.append(json.loads(self.debug_api('summary', server))['result']['Summary'].split(']')[1][1])
+            for server in range(1, len(server_configuration) + 1): actual.append(
+                json.loads(self.debug_api('summary', server))['result']['Summary'].split(']')[1][1])
             self.timestamped_print('actual', ''.join(actual))
             self.get_servers()
             if actual == desired:
                 ready = True
                 break
-            else: time.sleep(1)
+            else:
+                time.sleep(1)
         self.assertTrue(ready, 'Authority set never matched target authority set')
         self.timestamped_print('initial promotion complete')
         print()
+        result = self.debug_api_with_parameters('sim-ctrl', server, {'commands': ['x']})
+        print(result)
 
         self.wait_for_target_minute(target_minute)
 
@@ -345,14 +374,17 @@ class NetworkTests(unittest.TestCase):
 
         # display servers
         block, minute = self.current_block_minute()
-        self.timestamped_print('node', str(nodenumber), 'block', str(block).rjust(3), 'minute', minute, 'audit_server_list', audit_server_list)
-        # self.timestamped_print('node', str(nodenumber), 'block', str(block).rjust(3), 'minute', minute, 'federated_server_list', federated_server_list, 'audit_server_list', audit_server_list)
-        # self.timestamped_print('fed servers', [server[6:10] for server in federated_server_id_list], 'audit servers', [server[6:10] for server in audit_server_id_list])
+        self.timestamped_print('node', str(nodenumber), 'block', str(block).rjust(3), 'minute', minute,
+                               'audit_server_list', audit_server_list)
+        self.timestamped_print('node', str(nodenumber), 'block', str(block).rjust(3), 'minute', minute, 'federated_server_list', federated_server_list, 'audit_server_list', audit_server_list)
+        self.timestamped_print('fed servers', [server[6:10] for server in federated_server_id_list], 'audit servers', [server[6:10] for server in audit_server_id_list])
+        self.timestamped_print("audit_server_list", audit_server_list)
+        self.timestamped_print("federated_server_list", federated_server_list)
         return audit_server_list, federated_server_list
 
     def wait_for_target_minute(self, target_minute):
         self.timestamped_print('waiting for target minute')
-        self.timestamped_print('target          minute',  target_minute)
+        self.timestamped_print('target          minute', target_minute)
         start_block, start_minute = self.current_block_minute()
         self.timestamped_print('start block', str(start_block).rjust(3), 'minute', start_minute)
         for seconds in range(self.WAITTIME):
@@ -360,14 +392,18 @@ class NetworkTests(unittest.TestCase):
                 block, minute = self.current_block_minute()
                 if minute == target_minute and (minute != start_minute or block != start_block): break
                 time.sleep(0.25)
-            self.timestamped_print('      block', str(block).rjust(3), 'minute', minute, 'seconds', str(seconds).rjust(3))
+            self.timestamped_print('      block', str(block).rjust(3), 'minute', minute, 'seconds',
+                                   str(seconds).rjust(3))
             if minute == target_minute and (minute != start_minute or block != start_block): break
-        self.assertLess(seconds, self.WAITTIME-1, 'Target minute ' + str(target_minute) + ' not found')
+        self.assertLess(seconds, self.WAITTIME - 1, 'Target minute ' + str(target_minute) + ' not found')
         print()
 
     def fault(self, nodes_to_fault, expect_stall=False):
         end_test = False
         pre_block, pre_minute = self.current_block_minute()
+        self.timestamped_print("pre_block", pre_block)
+        self.timestamped_print("pre_minute", pre_minute)
+
 
         for node in nodes_to_fault:
             self.verify_faulting_nodes_minute_matches_node1(nodes_to_fault)
@@ -376,7 +412,8 @@ class NetworkTests(unittest.TestCase):
             self.timestamped_print('faulting node', node)
             print('********************************************************')
             fault_start_time = time.time()
-            result = self.debug_api_with_parameters('sim-ctrl', node, {'commands':['x']})
+            result = self.debug_api_with_parameters('sim-ctrl', node, {'commands': ['x']})
+            print(result)
             # self.factomd_api_with_parameters('message-filter', node, {'output-regex':'.*', 'input-regex':'.*'})
             self.timestamped_print('fault elapsed time = ', str(timedelta(seconds=time.time() - fault_start_time))[:-3])
             print()
@@ -386,6 +423,7 @@ class NetworkTests(unittest.TestCase):
         if post_block == pre_block and post_minute == pre_minute:
             # faulting completed in target minute
             faulting_finished_in_same_minute = True
+            self.wait_for_new_minute(expect_stall)
             self.wait_for_new_minute(expect_stall)
             current_audit_server_list, current_federated_server_list = self.get_servers()
             print()
@@ -476,7 +514,8 @@ class NetworkTests(unittest.TestCase):
                 block, minute = self.current_block_minute(nodenumber)
                 if minute != old_minute: break
                 time.sleep(0.25)
-            self.timestamped_print('node', nodenumber, 'block', str(block).rjust(3), 'minute', minute, 'seconds', str(seconds).rjust(3))
+            self.timestamped_print('node', nodenumber, 'block', str(block).rjust(3), 'minute', minute, 'seconds',
+                                   str(seconds).rjust(3))
             if minute != old_minute: break
         advanced = minute != old_minute
         if expect_stall != advanced:
@@ -502,7 +541,8 @@ class NetworkTests(unittest.TestCase):
                     node_audit_server_list[server], node_federated_server_list[server] = self.get_servers(server)
                     # self.timestamped_print('audit match', node_audit_server_list[server] == node1_audit_server_list)
                 print()
-                if all([node_audit_server_list[server] == node1_audit_server_list and node_federated_server_list[server] == node1_federated_server_list for server in nodes_to_check]): break
+                if all([node_audit_server_list[server] == node1_audit_server_list and node_federated_server_list[
+                    server] == node1_federated_server_list for server in nodes_to_check]): break
                 time.sleep(0.25)
             if all([node_audit_server_list[server] == node1_audit_server_list and node_federated_server_list[
                 server] == node1_federated_server_list for server in nodes_to_check]):
@@ -516,11 +556,16 @@ class NetworkTests(unittest.TestCase):
         promoted_server_count = 0
         for initial_audit_server in initial_audit_server_list:
             self.timestamped_print('initial_audit_server', initial_audit_server)
+            self.timestamped_print('current_federated_server_list', current_federated_server_list)
             if initial_audit_server in current_federated_server_list:
                 self.timestamped_print('promoted')
                 promoted_server_count += 1
                 self.timestamped_print('promoted_server_count', promoted_server_count)
-        if promoted_server_count != number_of_servers_to_promote: self.assertTrue(False, 'Wrong number of audit servers promoted')
+
+        self.timestamped_print('promoted_server_count', promoted_server_count)
+        self.timestamped_print('number_of_servers_to_promote', number_of_servers_to_promote)
+        if promoted_server_count != number_of_servers_to_promote: self.assertTrue(False,
+                                                                                  'Wrong number of audit servers promoted')
         self.timestamped_print('audit servers properly promoted')
         print()
 
@@ -543,7 +588,7 @@ class NetworkTests(unittest.TestCase):
             self.timestamped_print('reconnecting node', node)
 
             # self.factomd_api_with_parameters('message-filter', node, {'output-regex': 'off', 'input-regex':'off'})
-            result = self.debug_api_with_parameters('sim-ctrl', node, {'commands':['x']})
+            result = self.debug_api_with_parameters('sim-ctrl', node, {'commands': ['x']})
             # net.nettool.main(command='ins', fromvar='node1', to='node' + str(node), action='allow', file=config_file)
 
             self.timestamped_print('waiting for reconnected node', str(node), 'to sync')
@@ -560,13 +605,14 @@ class NetworkTests(unittest.TestCase):
                 block1, minute1 = self.current_block_minute(1)
                 self.timestamped_print('node 1 block', str(block1).rjust(3), 'minute', minute1)
                 for node in range(1, number_of_nodes):
-                    server = node +1
+                    server = node + 1
                     block, minute = self.current_block_minute(server)
                     self.timestamped_print('node', server, 'block', str(block).rjust(3), 'minute', minute)
                     if server in disconnected_nodes:
                         # disconnected nodes should be behind
                         if minute == minute1: match = False
-                    elif minute != minute1: match = False
+                    elif minute != minute1:
+                        match = False
                     if match == False: break
                 print()
                 if match == True: break
@@ -590,9 +636,12 @@ class NetworkTests(unittest.TestCase):
                     advanced = True
                     break
                 time.sleep(0.25)
-            self.timestamped_print('node', nodenumber, 'block', str(block).rjust(3), 'minute', minute, 'seconds', str(seconds).rjust(3))
+            self.timestamped_print('node', nodenumber, 'block', str(block).rjust(3), 'minute', minute, 'seconds',
+                                   str(seconds).rjust(3))
             if advanced: break
-        self.assertTrue(advanced, 'node ' + str(nodenumber) + ' never advanced past block ' + str(main_block) + ' minute ' + str(main_minute))
+        self.assertTrue(advanced,
+                        'node ' + str(nodenumber) + ' never advanced past block ' + str(main_block) + ' minute ' + str(
+                            main_minute))
 
     def restart_test(self, test_start_time, config_file):
         self.timestamped_print('Faulting ended in a different minute from which it started. Lets try this test again!')
@@ -609,7 +658,7 @@ class NetworkTests(unittest.TestCase):
         self.timestamped_print('waiting for new block')
         for seconds in range(self.WAITTIME):
             block = self.current_block_minute(nodenumber)[0]
-            print ('node', nodenumber, 'block', str(block).rjust(3), 'seconds', str(seconds).rjust(3))
+            print('node', nodenumber, 'block', str(block).rjust(3), 'seconds', str(seconds).rjust(3))
             if block > old_block: break
             time.sleep(1)
         self.assertGreater(block, old_block, errormessage)
@@ -665,48 +714,35 @@ class NetworkTests(unittest.TestCase):
         r = requests.get(url, data=json.dumps(payload), headers=headers)
         return r.text
 
+    #result = self.debug_api_with_parameters('sim-ctrl', node, {'commands': ['x']})
     def debug_api_with_parameters(self, method, nodenumber, params_dict):
         url = 'http://' + 'localhost:' + '8' + str(nodenumber) + '88' + '/debug'
         headers = {'content-type': 'text/plain'}
         payload = {"jsonrpc": "2.0", "id": 0, "params": params_dict, "method": method}
         r = requests.get(url, data=json.dumps(payload), headers=headers)
+        print(r)
         return r.text
 
     def wallet_api(self, method):
-        url = 'http://' + self.wallet_address +'/v2'
+        url = 'http://' + self.wallet_address + '/v2'
         headers = {'content-type': 'text/plain'}
         payload = {"jsonrpc": "2.0", "id": 0, "method": method}
         r = requests.post(url, data=json.dumps(payload), headers=headers)
         return r.text
 
     def wallet_api_with_parameters(self, method, params_dict):
-        url = 'http://' + self.wallet_address +'/v2'
+        url = 'http://' + self.wallet_address + '/v2'
         headers = {'content-type': 'text/plain'}
         payload = {"jsonrpc": "2.0", "id": 0, "params": params_dict, "method": method}
         self.timestamped_print('payload', json.dumps(payload))
         r = requests.post(url, data=json.dumps(payload), headers=headers)
         return r.text
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     def _network_bring_up(network_config_file):
         net.nettool.main(command='up', file=network_config_file)
 
     def _network_bring_down(network_config_file):
         net.nettool.main(command='down', file=network_config_file)
-
 
     def test_multiple_elections_different_blocks(self):
         config_file = self.data['LAAAALLLL']
@@ -802,14 +838,12 @@ class NetworkTests(unittest.TestCase):
                       'Federated server ' + initial_federated_server_list[-4] + ' not demoted')
         self.timestamped_print('node 8 properly demoted')
 
-
     def test_repeat_multiple_elections_different_blocks(self):
         for x in range(1, 1001):
             print()
             self.timestamped_print('****run****', x)
             self.test_network_down()
             self.test_multiple_elections_different_blocks()
-
 
     # *********************************************************************************
 
@@ -827,14 +861,12 @@ class NetworkTests(unittest.TestCase):
             time.sleep(1)
         self.assertTrue(one == six, 'node 6 and node 7 were not informed of their audit status')
 
-
     def test_connections(self):
         network = 'LLLL_mesh'
         config_file = self.data[network]
 
         self.initialize_network(config_file)
         for node in range(1, 5): self.timestamped_print('node', node, 'connections', self.get_datadump(node))
-
 
     def test_connection_monitor(self):
         network = 'LLLL_mesh'
@@ -846,7 +878,6 @@ class NetworkTests(unittest.TestCase):
             self.timestamped_print(x, 'seconds')
             for node in range(1, 5): self.timestamped_print('node', node, 'connections', self.get_datadump(node))
             time.sleep(1)
-
 
     # *********************************************************************************
 
@@ -893,25 +924,29 @@ class NetworkTests(unittest.TestCase):
         self.assertGreater(height, cutoff_height, 'Network did not restart')
         for node in range(1, 5): self.timestamped_print('node', node, 'connections', self.get_datadump(node))
 
-
     def test_transactions(self):
         transaction_name = 'here_to_there4'
         self.timestamped_print(self.wallet_api('all-addresses'))
         self.timestamped_print(self.factomd_api_with_parameters('factoid-balance', 1,
-                                               {"address": 'FA2hWZgbpJKeVQhYckHML2XuJV4DgHoN7ZgBRpWdNh1rpqjR931F'}))
+                                                                {
+                                                                    "address": 'FA2hWZgbpJKeVQhYckHML2XuJV4DgHoN7ZgBRpWdNh1rpqjR931F'}))
         self.timestamped_print(self.factomd_api_with_parameters('factoid-balance', 1,
-                                               {"address": 'FA3EPZYqodgyEGXNMbiZKE5TS2x2J9wF8J9MvPZb52iGR78xMgCb'}))
+                                                                {
+                                                                    "address": 'FA3EPZYqodgyEGXNMbiZKE5TS2x2J9wF8J9MvPZb52iGR78xMgCb'}))
         print()
 
         importer = self.wallet_api_with_parameters('import-addresses', {
-            'addresses': [{'secret': self.data['input_private_address'], 'secret': self.data['output_private_address']}]})
+            'addresses': [
+                {'secret': self.data['input_private_address'], 'secret': self.data['output_private_address']}]})
         self.timestamped_print('importer', importer)
         print()
 
         self.timestamped_print(self.factomd_api_with_parameters('factoid-balance', 1,
-                                               {"address": 'FA2hWZgbpJKeVQhYckHML2XuJV4DgHoN7ZgBRpWdNh1rpqjR931F'}))
+                                                                {
+                                                                    "address": 'FA2hWZgbpJKeVQhYckHML2XuJV4DgHoN7ZgBRpWdNh1rpqjR931F'}))
         self.timestamped_print(self.factomd_api_with_parameters('factoid-balance', 1,
-                                               {"address": 'FA3EPZYqodgyEGXNMbiZKE5TS2x2J9wF8J9MvPZb52iGR78xMgCb'}))
+                                                                {
+                                                                    "address": 'FA3EPZYqodgyEGXNMbiZKE5TS2x2J9wF8J9MvPZb52iGR78xMgCb'}))
         print()
 
         new = self.wallet_api_with_parameters('new-transaction', {'tx-name': transaction_name})
@@ -919,7 +954,8 @@ class NetworkTests(unittest.TestCase):
         print()
 
         input = self.wallet_api_with_parameters('add-input',
-                                                {'tx-name': transaction_name, 'address': self.data['input_public_address'],
+                                                {'tx-name': transaction_name,
+                                                 'address': self.data['input_public_address'],
                                                  'amount': 100000000})
         self.timestamped_print('input', input)
         print()
@@ -931,7 +967,8 @@ class NetworkTests(unittest.TestCase):
         print()
 
         fee = self.wallet_api_with_parameters('sub-fee',
-                                              {'tx-name': transaction_name, 'address': self.data['output_public_address']})
+                                              {'tx-name': transaction_name,
+                                               'address': self.data['output_public_address']})
         self.timestamped_print('fee', fee)
         print()
 
@@ -945,7 +982,8 @@ class NetworkTests(unittest.TestCase):
         print()
 
         submit = self.factomd_api_with_parameters('factoid-submit', 1,
-                                                  {'transaction': json.loads(compose)['result']['params']['transaction']})
+                                                  {'transaction': json.loads(compose)['result']['params'][
+                                                      'transaction']})
         self.timestamped_print('submit', submit)
         print()
 
@@ -957,7 +995,6 @@ class NetworkTests(unittest.TestCase):
             self.timestamped_print('ack', ack, seconds, 'seconds')
             print()
             time.sleep(1)
-
 
     # *******************************************************************************
 
@@ -1009,7 +1046,6 @@ class NetworkTests(unittest.TestCase):
         #     time.sleep(1)
         #
 
-
     def test_unlimited_election_broadcast(self):
         network = 'LLALL_mesh'
         config_file = self.data[network]
@@ -1057,7 +1093,7 @@ class NetworkTests(unittest.TestCase):
         net.nettool.main(command='down', destroy=self.destroy, file=self.config_file)
 
     def test_network_status(self):
-        net.nettool.main(command='status', file=self.data['network_config_file'])
+        net.nettool.main(command='status', file=self.config_file)
 
     def test_docker_ps(self):
         subprocess.call("docker ps", shell=True)
@@ -1065,15 +1101,4 @@ class NetworkTests(unittest.TestCase):
     def test_weave_status_dns(self):
         subprocess.call("weave status dns", shell=True)
 
-    # ***************************************************************************
-
-
-
-
-
-
-
-
-
-
-
+        # ***************************************************************************

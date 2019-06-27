@@ -89,6 +89,9 @@ class Image(object):
         exists.
         """
         if not self.is_built or rebuild:
+            print("building image")
+            print(self.path)
+            print(self.tag)
             with log.step("Building image", self.tag):
                 kwargs = self.extra_args.copy()
                 kwargs["path"] = self.path
