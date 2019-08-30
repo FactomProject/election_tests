@@ -540,28 +540,28 @@ class NetworkTests(unittest.TestCase):
 
     def factomd_api(self, method, nodenumber=1):
         url = 'http://' + 'localhost:' + '8' + str(nodenumber) + '88' + '/v2'
-        headers = {'content-type': 'text/plain'}
+        headers = {'Host': 'localhost:8088', 'content-type': 'text/plain'}
         payload = {"jsonrpc": "2.0", "id": 0, "method": method}
         r = requests.get(url, data=json.dumps(payload), headers=headers)
         return r.text
 
     def factomd_api_with_parameters(self, method, nodenumber, params_dict):
         url = 'http://' + 'localhost:' + '8' + str(nodenumber) + '88' + '/v2'
-        headers = {'content-type': 'text/plain'}
+        headers = {'Host': 'localhost:8088', 'content-type': 'text/plain'}
         payload = {"jsonrpc": "2.0", "id": 0, "params": params_dict, "method": method}
         r = requests.get(url, data=json.dumps(payload), headers=headers)
         return r.text
 
     def debug_api(self, method, nodenumber=1):
         url = 'http://' + 'localhost:' + '8' + str(nodenumber) + '88' + '/debug'
-        headers = {'content-type': 'text/plain'}
+        headers = {'Host': 'localhost:8088', 'content-type': 'text/plain'}
         payload = {"jsonrpc": "2.0", "id": 0, "method": method}
         r = requests.get(url, data=json.dumps(payload), headers=headers)
         return r.text
 
     def debug_api_with_parameters(self, method, nodenumber, params_dict):
         url = 'http://' + 'localhost:' + '8' + str(nodenumber) + '88' + '/debug'
-        headers = {'content-type': 'text/plain'}
+        headers = {'Host': 'localhost:8088', 'content-type': 'text/plain'}
         payload = {"jsonrpc": "2.0", "id": 0, "params": params_dict, "method": method}
         r = requests.get(url, data=json.dumps(payload), headers=headers)
         return r.text
