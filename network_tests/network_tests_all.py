@@ -236,9 +236,11 @@ class NetworkTests(unittest.TestCase):
             initial_audit_server_list = current_audit_server_list
 
             # fault 2nd node
-            self.fault(nodes_to_fault=(nodes_to_fault[1],), expect_stall=True)
+            self.fault(nodes_to_fault=(nodes_to_fault[1],), expect_stall=False)
 
             self.print_elapsed_time('test', test_start_time)
+            # stop network
+            net.nettool.main(command='down', destroy=True, file=config_file)
 
     # *******************************************************************************
 
@@ -403,7 +405,7 @@ class NetworkTests(unittest.TestCase):
             for quarter_seconds in range(4):
                 block, minute = self.current_block_minute(nodenumber)
                 if minute != old_minute: break
-                time.sleep(0.25)
+                time.sleep(6)
             self.timestamped_print('node', nodenumber, 'block', str(block).rjust(3), 'minute', minute, 'seconds', str(seconds).rjust(3))
             if minute != old_minute: break
         advanced = minute != old_minute
